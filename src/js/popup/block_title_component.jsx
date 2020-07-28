@@ -1,12 +1,19 @@
 import React from "react";
 import { hot } from "react-hot-loader";
 
+
+import logo from '../../img/logo.png'; // with import
+
+
+
 class BlockTitleComponent extends React.Component{
     render() {
         return (
             <div id='block_title'>
                  
-                ANTI-TabHoarder
+                 <img src={logo} />
+
+
             </div>
         )
     }
