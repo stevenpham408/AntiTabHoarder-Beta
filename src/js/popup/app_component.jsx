@@ -11,10 +11,8 @@ class AppComponent extends React.Component{
             <div>
                 <BlockTitleComponent/>
                 <DividerComponent text='Auto Delete'/>
-                {/* <AutoDeleteComponent/> */}
-
-                
-                
+                <AutoDeleteComponent/>
+                <DividerComponent text='Tab Manager'/>
             </div>
         )
     }
