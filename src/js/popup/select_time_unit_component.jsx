@@ -2,24 +2,48 @@ import React from "react";
 import { hot } from "react-hot-loader";
 import { withStyles } from "@material-ui/core/styles";
 import { Select } from '@material-ui/core'
-
-import { MenuItem } from '@material-ui/core'
-
+import {MenuItem} from '@material-ui/core'
+  
 const StyledSelect = withStyles({
     root: {
         position: 'relative',
-        marginTop: '20px',
+        marginTop: '1.465em',
         fontSize: '14px',
         minWidth: '50px',
+
     },
-  })(Select);
-  
-  function ClassesShorthand() {
+})(Select);
+
+function SelectComponent() {
+    const [state, setState] = React.useState('');
+
+    const handleChange = (event) => {
+        setState(event.target.value);
+        console.log(event.target.value)
+        chrome.storage.local.set({timeUnit: event.target.value });
+    };
+
+    React.useEffect(() => {
+        chrome.storage.local.get(null, function(res){
+            if(res.timeUnit != undefined){
+                setState(res.timeUnit);
+            }
+        })
+    });
+    
     return (
-        <div>
-          <Select></Select>
-        </div>
+        <StyledSelect 
+            id='selectTimeUnit'
+            value={state}
+            onChange = {handleChange}
+            inputProps={{
+                name: 'timeUnit'
+            }}
+            >
+                <MenuItem value={'minutes'}>minutes</MenuItem>
+                <MenuItem value={'hours'}>hours</MenuItem>
+        </StyledSelect>
     )
-  }
+}
   
-  export default hot(module)(StyledSelect)
+export default hot(module)(SelectComponent)
