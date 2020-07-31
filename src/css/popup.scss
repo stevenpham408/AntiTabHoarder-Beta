@@ -1,7 +1,6 @@
-    body {
+body {
     width: 350px;
-    height: 100px;
-    margin:0
+    height: 350px;
 }
 
 body {
@@ -13,7 +12,8 @@ body {
   
   .container {
     max-width: 90%;  
-    margin: 40px auto;
+    margin-left: 25px;
+    margin-top: 15px;
   }
   
   .hr-text {
@@ -24,7 +24,7 @@ body {
     color: black;
     text-align: center;
     height: 1.5em;
-    opacity: 0.85;
+    opacity: 0.9;
     &:before {
       content: '';
       // use the linear-gradient for the fading effect
@@ -49,27 +49,3 @@ body {
       background-color: #fcfcfa;
     }
   }
-
-// #block_title {
-//     background-color: white; 
-//     width: 350px;
-// }
-
-// #auto_delete_text {
-//     display: inline-block;
-//     font-size: 15px;
-//     padding-top: 25px;
-//     padding-right:20px;
-// }
-
-// #auto_delete_time {
-//     display: inline-block;    
-// }
-
-
-// #block1 {
-//     display: inline-block;
-//     padding-top: 25px;
-//     padding-left: 30px;
-// }
-
