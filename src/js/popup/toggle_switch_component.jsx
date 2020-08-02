@@ -1,12 +1,8 @@
 import React, { useState } from "react";
 import { withStyles } from "@material-ui/core/styles";
 import { hot } from "react-hot-loader";
-
 import { Switch } from '@material-ui/core/';
 
-
-// The `withStyles()` higher-order component is injecting a `classes`
-// prop that is used by the `Button` component.
 const StyledSwitch = withStyles({
   root: {
     position: 'relative',
@@ -16,37 +12,20 @@ const StyledSwitch = withStyles({
   
 })(Switch);
 
-function ClassesShorthand() {
+function ClassesShorthand({auto_delete_toggle_state, handleToggle}) {
 
-  const [state, setState] = React.useState(undefined)
- 
-  const handleChange = (event) => {
-
-    setState(event.target.checked);
-    chrome.storage.local.set({auto_delete_toggle: event.target.checked });
-  }
-
-  React.useEffect(() => {
-    
-    chrome.storage.local.get(null, function(res){
-      setState(res.auto_delete_toggle === undefined ? false : res.auto_delete_toggle);
-    });
-  }, []);
-
-  if(state === undefined) {
+  if(auto_delete_toggle_state === undefined) {
     return null;
   }
 
   else{
-  return (
-
+  return (      
     <StyledSwitch
-    checked={state}
-    onChange={handleChange}
-    > 
-    </StyledSwitch>)
+    checked={auto_delete_toggle_state}
+    onChange={handleToggle}>
+    </StyledSwitch>
+    )
   }
- 
 }
 
 export default hot(module)(ClassesShorthand)

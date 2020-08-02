@@ -1,6 +1,5 @@
 import React from "react";
 import { hot } from "react-hot-loader";
-import { withStyles } from "@material-ui/core/styles";
 
 import { TextField } from '@material-ui/core/';
 
@@ -23,7 +22,7 @@ const InputLabelProps = {
     }
 };
 
-function TimeAmountComponent(){
+function TimeAmountComponent({auto_delete_toggle_state}){
     const [state, setState] = React.useState('');
 
     const handleChange = (event) => {
@@ -39,8 +38,24 @@ function TimeAmountComponent(){
          });
     }, []);
 
-    return (
-        <TextField 
+    if(auto_delete_toggle_state === false){
+        return <TextField
+        disabled
+        id="auto_delete_time" 
+        label="Amount of Time" 
+        type='number'
+        variant='standard'
+        value={''}         
+        style={style}
+        inputProps={inputProps}
+        InputLabelProps={InputLabelProps}       
+        />
+    }
+
+
+
+    else return (
+            <TextField 
         id="auto_delete_time" 
         label="Amount of Time" 
         type='number'

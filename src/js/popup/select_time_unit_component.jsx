@@ -14,12 +14,11 @@ const StyledSelect = withStyles({
     },
 })(Select);
 
-function SelectComponent() {
+function SelectComponent({auto_delete_toggle_state}) {
     const [state, setState] = React.useState('');
 
     const handleChange = (event) => {
         setState(event.target.value);
-        console.log(event.target.value)
         chrome.storage.local.set({timeUnit: event.target.value });
     };
 
@@ -31,6 +30,9 @@ function SelectComponent() {
         })
     });
     
+    if(auto_delete_toggle_state === false){
+        return <StyledSelect disabled/>
+    }
     return (
         <StyledSelect 
             id='selectTimeUnit'
