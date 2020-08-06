@@ -1,27 +1,38 @@
 import '../img/icon-128.png'
 import '../img/icon-34.png'
 'use strict';
+import {makeData, getVarFromLocalStorage2} from './makeData'
 import{ start, end } from './time.js';
-
+let tableEntry = {}
 // var startTime, endTime;
 initializeState();
-// updateState();
-// updateLastVisited();
+initializeTableEntries();
+updateLastVisited();
 // updateTimeElapsedOnTabChange();
 
 // Initialize the states
 function initializeState(){
-	// chrome.storage.local.set({timeUnit: 'min'});
-	// chrome.storage.local.set({numTime: 0});
-	// chrome.storage.local.set({toggle: false});
-	// chrome.storage.local.set({toggle2: false});
-	// chrome.storage.local.set({lastVisited: {} });
-	// chrome.storage.local.set({timeElapsed: {} });
+	chrome.storage.local.set({lastVisited: {} });
+	chrome.storage.local.set({timeElapsed: {} });
 	chrome.storage.local.set({tabsToDelete: {} });
+}
+
+function initializeTableEntries(){
+	chrome.storage.local.get(null, function(res){
+		chrome.tabs.query({currentWindow: true}, function(arrayOfTabs){
+			for(const tab of arrayOfTabs){
+				tableEntry[tab.id] = {title: tab.title, timeElapsed: '', lastVisited: ''}
+				chrome.storage.local.set({entries: tableEntry})
+			}
+		})
+	})
+ 
 }
 
 // Deletes new tabs after a user-specified delay
 chrome.tabs.onCreated.addListener(function(tab){
+	tableEntry[tab.id] = {title: tab.title, timeElapsed: '', lastVisited: ''}
+	chrome.storage.local.set({entries: tableEntry})
 	chrome.storage.local.get(null, function(results){
 		if(results.auto_delete_toggle == true){
 			results.tabsToDelete[tab.id] = new Date().toString();
@@ -34,6 +45,11 @@ chrome.tabs.onCreated.addListener(function(tab){
 
 // // In the case the user self-deletes the tab before delayedDelete is ran, no errors will be found
 chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
+	console.log('Removed', tabID, 'from tableEntry. Original data:', tableEntry[tabID]);
+	delete tableEntry[tabID];
+	console.log('Check to see if data is now null:', tableEntry[tabID])
+	chrome.storage.local.set({entries: tableEntry});
+
 	chrome.storage.local.get(null, function(results){
 		if(results.tabsToDelete.hasOwnProperty(tabID) && results.auto_delete_toggle == true){
 				delete results.tabsToDelete[tabID];
@@ -42,68 +58,14 @@ chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
 	});
 });
 
-
-// // Updates the state of the extension if user made any changes to it
-// function updateState(){
-// 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse){
-
-// 		// User changes Delayed Delete settings from min->hr or vice-versa
-//  		if(request.message == 'User changed time unit!'){
-// 			chrome.storage.local.set({timeUnit: request.varNewUnit});
-// 			console.log('Unit of time changed to: ', request.varNewUnit);
-// 		}
-
-// 		// User changes delay-value to autodelete tabs
-// 		else if(request.message == 'User changed field value!'){
-// 			chrome.storage.local.set({numTime: request.varNewNumTime});
-// 			console.log('Field value changed. to: ', request.varNewNumTime);
-// 		}
-
-// 		// User toggles Delayed Delete
-// 		else if(request.message == 'User toggled Delayed Delete!'){
-// 			chrome.storage.local.set({toggle: request.varNewToggle});
-// 			console.log('Delay Delete toggle changed to: ', request.varNewToggle);
-// 		}
-
-// 		// User toggles Tab Manager
-// 		else if(request.message == 'User toggled Tab Monitoring!'){
-// 			chrome.storage.local.set({toggle2: request.varNewToggleMonitoring});
-// 			console.log('Tab Monitoring toggle changed to: ', request.varNewToggleMonitoring);
-// 		}
-
-// 		else if(request.message == 'Start the timer!'){
-// 			startTime = start();
-// 		}
-
-// 		else if(request.message == 'End the timer!'){
-// 			chrome.storage.local.get(null, function(results){
-// 				sendResponse({response: 'Received'});
-// 			    chrome.tabs.query({currentWindow: true, active: true}, function(arrayTabs){
-// 			      results.timeElapsed[arrayTabs[0].id] =  results.timeElapsed[arrayTabs[0].id] + end(endTime, startTime);
-// 			      chrome.storage.local.set({timeElapsed: results.timeElapsed});
-// 						startTime = start();
-// 			    })
-// 			})
-
-// 		return true;
-// 		}
-// 	});
-// }
-
 // // Updates the Last Visited column for the current tab
-// function updateLastVisited(){
-// 	chrome.tabs.onActivated.addListener(function(activeInfo){
-// 		chrome.storage.local.get(null, function(results){
-// 				if(results.toggle2 == true){
-// 					let currentTab = activeInfo.tabId;
-// 					console.log('Switched to Tab: ', currentTab);
-// 					results.lastVisited[currentTab] = (new Date()).toJSON();
-// 					chrome.storage.local.set( {lastVisited: results.lastVisited} );
-
-// 				}
-// 			})
-// 		})
-// }
+function updateLastVisited(){
+	chrome.tabs.onActivated.addListener(function(activeInfo){
+		let currentTab = activeInfo.tabId;
+		tableEntry[currentTab].lastVisited = dateToString((new Date()));
+		chrome.storage.local.set( {entries: tableEntry} );
+	})
+}
 
 // // Updates the Time Elapsed column for the current tab
 // function updateTimeElapsedOnTabChange(){
@@ -150,4 +112,34 @@ function delayedDelete(tabID){
 
 		})
 	})
+}
+
+function dateToString(dateObject) {
+  const year = dateObject.getFullYear();
+
+  const month = dateObject.getMonth() + 1;
+  const day = dateObject.getDate();
+  let hour = dateObject.getHours();
+
+  if (dateObject.getHours() < 10) {
+    hour = "0" + dateObject.getHours();
+  }
+
+  let minutes = dateObject.getMinutes();
+  let seconds = dateObject.getSeconds();
+
+
+  if (dateObject.getMinutes() < 10) {
+    minutes = "0" + dateObject.getMinutes();
+  }
+
+  if (dateObject.getSeconds() < 10) {
+    seconds = "0" + dateObject.getSeconds();
+  }
+
+  const formattedDate = month + "/" + day + "/" + year;
+  const formattedTime = hour + ":" + minutes + ":" + seconds;
+
+  const finishedFormattedString = formattedDate + ", " + formattedTime;
+  return finishedFormattedString;
 }
