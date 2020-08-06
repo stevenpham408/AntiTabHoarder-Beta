@@ -1,7 +1,6 @@
 import React from "react";
 import { hot } from "react-hot-loader"; 
 
-// const message = props => <div> {props.msg} </div>
 class DividerComponent extends React.Component{
     // Credit: @scottzirkel
     render () {

@@ -6,7 +6,7 @@ import { Switch } from '@material-ui/core/';
 const StyledSwitch = withStyles({
   root: {
     position: 'relative',
-    marginTop: '20px',
+    marginTop: '15px',
     marginLeft: '90px'
   },
   

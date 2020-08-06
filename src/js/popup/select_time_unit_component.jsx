@@ -29,9 +29,12 @@ function SelectComponent({auto_delete_toggle_state}) {
             }
         })
     });
-    
+
     if(auto_delete_toggle_state === false){
-        return <StyledSelect disabled/>
+        return <StyledSelect 
+                disabled
+                value={''}
+                />
     }
     return (
         <StyledSelect 
