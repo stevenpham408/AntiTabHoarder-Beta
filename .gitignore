@@ -1,3 +1,14 @@
 node_modules
 build
 secrets.*.js
+.babelrc
+LICENSE.md
+README.md
+webpack.config.js
+yarn.lock
+src/img/icon-34.png
+src/img/icon-128.png
+src/img/logo.png
+utils/build.js
+utils/env.js
+utils/webserver.js
