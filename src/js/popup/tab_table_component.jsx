@@ -12,16 +12,19 @@ import styled from 'styled-components'
 // import {makeData} from '../background.js'
 const Styles = styled.div`
   padding: 1rem;
-
+  .table{
+      display:block;
+    height: 250px;
+    
     .th,
     .td {
-
       position: relative;
       height: 40px;
-      font-size: 11px;
+      font-size: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      background-color: white;
 
       :last-child {
         border-right: 0;
@@ -29,7 +32,7 @@ const Styles = styled.div`
 
       .resizer {
         display: inline-block;
-        background: lightgray;
+        background: darkgray;
         width: 3px;
         height: 100%;
         position: absolute;
@@ -45,12 +48,51 @@ const Styles = styled.div`
         }
       }
     }
+
+    &.sticky {
+        overflow: scroll;
+        .header,
+        .footer {
+          position: sticky;
+          z-index: 1;
+          width: fit-content;
+        }
+  
+        .header {
+          top: 0;
+          box-shadow: 0px 3px 3px #ccc;
+        }
+  
+        .footer {
+          bottom: 0;
+          box-shadow: 0px -3px 3px #ccc;
+        }
+  
+        .body {
+          position: relative;
+          z-index: 0;
+        }
+  
+        [data-sticky-td] {
+          position: sticky;
+        }
+  
+        [data-sticky-last-left-td] {
+          box-shadow: 2px 0px 3px #ccc;
+        }
+  
+        [data-sticky-first-right-td] {
+          box-shadow: -2px 0px 3px #ccc;
+        }
+      }
+    }
 `;
+
 function Table({ columns, data, fetchData, loading, pageCount: controlledPageCount }){
     const defaultColumn = React.useMemo(
         () => ({
             minWidth: 70,
-            width: 135,
+            width: 150,
             maxWidth: 400 
         }), []
     );
@@ -91,8 +133,8 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
     return (
         <>
               <div>
-        <MaUTable {...getTableProps()} className="table">
-          <TableHead>
+        <MaUTable {...getTableProps()} className="table sticky">
+          <div className='header'>
             {headerGroups.map((headerGroup) => (
               <TableRow {...headerGroup.getHeaderGroupProps()} className="tr">
                 {headerGroup.headers.map((column) => (
@@ -109,7 +151,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
                 ))}
               </TableRow>
             ))}
-          </TableHead>
+          </div>
 
           <TableBody {...getTableBodyProps()}>
             {rows.map((row, i) => {
@@ -128,46 +170,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
             })}
           </TableBody>
         </MaUTable>
-      </div>
-        {/* <MaUTable {...getTableProps()}>
-            <TableHead>
-                {headerGroups.map(headerGroup => (
-                <TableRow {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                    <TableCell {...column.getHeaderProps()}>
-                        {column.render("Header")}
-                        <div
-                      {...column.getResizerProps()}
-                      className={`resizer ${
-                        column.isResizing ? 'isResizing' : ''
-                      }`}
-                    />
-
-                    </TableCell>
-                    ))}
-                </TableRow>
-                ))}
-            </TableHead>
-            
-            <TableBody>
-                {rows.map((row, i) => {
-                    prepareRow(row)
-                    return (
-                    <TableRow {...row.getRowProps()}>
-                        {row.cells.map(cell => {
-                            return (
-                            <TableCell {...cell.getCellProps()}>
-                                {cell.render('Cell')}
-                            </TableCell>
-                            )
-                        })}
-                    
-                    </TableRow>
-                    )
-                })}
-            
-            </TableBody>
-        </MaUTable> */}
+      </div>        
         
         <div className="pagination">
             <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
