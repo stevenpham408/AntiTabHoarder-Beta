@@ -5,13 +5,46 @@ import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
-import { useTable, usePagination } from 'react-table'
+import { useTable, usePagination, useResizeColumns, useBlockLayout} from 'react-table'
 import {makeData} from '../makeData.js'
-// import {makeData} from '../background.js'
+import styled from 'styled-components'
 
+// import {makeData} from '../background.js'
+const Styles = styled.div`
+  padding: 1rem;
+
+    .th,
+    .td {
+
+      position: relative;
+
+      :last-child {
+        border-right: 0;
+      }
+
+      .resizer {
+        display: inline-block;
+        background: blue;
+        width: 1px;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transform: translateX(50%);
+        z-index: 1;
+        ${'' /* prevents from scrolling while dragging on touch devices */}
+        touch-action:none;
+
+        &.isResizing {
+          background: red;
+        }
+      }
+    }
+`;
 function Table({ columns, data, fetchData, loading, pageCount: controlledPageCount }){
     const { 
         getTableProps, 
+        getTableBodyProps,
         headerGroups, 
         rows, 
         prepareRow,
@@ -33,7 +66,10 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
         manualPagination: true,
         pageCount: controlledPageCount,
     },
-        usePagination
+        useBlockLayout,
+        useResizeColumns,
+        usePagination,
+
     )
 
     React.useEffect(() => {
@@ -42,13 +78,59 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
 
     return (
         <>
-        <MaUTable {...getTableProps()}>
+              <div>
+        <MaUTable {...getTableProps()} className="table">
+          <TableHead>
+            {headerGroups.map((headerGroup) => (
+              <TableRow {...headerGroup.getHeaderGroupProps()} className="tr">
+                {headerGroup.headers.map((column) => (
+                  <TableCell {...column.getHeaderProps()} className="th">
+                    {column.render("Header")}
+
+                    <div
+                      {...column.getResizerProps()}
+                      className={`resizer ${
+                        column.isResizing ? "isResizing" : ""
+                      }`}
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableHead>
+
+          <TableBody {...getTableBodyProps()}>
+            {rows.map((row, i) => {
+              prepareRow(row);
+              return (
+                <TableRow {...row.getRowProps()} className="tr">
+                  {row.cells.map((cell) => {
+                    return (
+                      <TableCell {...cell.getCellProps()} className="td">
+                        {cell.render("Cell")}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </MaUTable>
+      </div>
+        {/* <MaUTable {...getTableProps()}>
             <TableHead>
                 {headerGroups.map(headerGroup => (
                 <TableRow {...headerGroup.getHeaderGroupProps()}>
                     {headerGroup.headers.map(column => (
                     <TableCell {...column.getHeaderProps()}>
                         {column.render("Header")}
+                        <div
+                      {...column.getResizerProps()}
+                      className={`resizer ${
+                        column.isResizing ? 'isResizing' : ''
+                      }`}
+                    />
+
                     </TableCell>
                     ))}
                 </TableRow>
@@ -73,7 +155,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
                 })}
             
             </TableBody>
-        </MaUTable>
+        </MaUTable> */}
         
         <div className="pagination">
             <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
@@ -172,14 +254,14 @@ function TableComponent(){
         ], []);
         
     return (
-    <div>
-        <Table
-        columns={columns} 
-        data={data}
-        fetchData = {fetchData}
-        loading={loading}
-        pageCount={pageCount}/>
-    </div>
+        <Styles>
+            <Table
+            columns={columns} 
+            data={data}
+            fetchData = {fetchData}
+            loading={loading}
+            pageCount={pageCount}/>
+        </Styles>
     )
 }
 
