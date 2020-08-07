@@ -17,6 +17,11 @@ const Styles = styled.div`
     .td {
 
       position: relative;
+      height: 40px;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
 
       :last-child {
         border-right: 0;
@@ -24,8 +29,8 @@ const Styles = styled.div`
 
       .resizer {
         display: inline-block;
-        background: blue;
-        width: 1px;
+        background: lightgray;
+        width: 3px;
         height: 100%;
         position: absolute;
         right: 0;
@@ -36,12 +41,19 @@ const Styles = styled.div`
         touch-action:none;
 
         &.isResizing {
-          background: red;
+          background: gray;
         }
       }
     }
 `;
 function Table({ columns, data, fetchData, loading, pageCount: controlledPageCount }){
+    const defaultColumn = React.useMemo(
+        () => ({
+            minWidth: 70,
+            width: 135,
+            maxWidth: 400 
+        }), []
+    );
     const { 
         getTableProps, 
         getTableBodyProps,
@@ -61,7 +73,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
     } = useTable({
         columns, 
         data,
-
+        defaultColumn,
         initialState: { pageIndex: 0 },
         manualPagination: true,
         pageCount: controlledPageCount,
