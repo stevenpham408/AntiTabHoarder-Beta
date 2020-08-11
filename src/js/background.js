@@ -1,32 +1,32 @@
 import '../img/icon-128.png'
 import '../img/icon-34.png'
 'use strict';
-import {makeData, getVarFromLocalStorage2} from './makeData'
 import{ start, end } from './time.js';
 let tableEntry = {}
-// var startTime, endTime;
-initializeState();
+var startTime, endTime;
 initializeTableEntries();
+updateTitle();
 updateLastVisited();
-// updateTimeElapsedOnTabChange();
+updateTimeElapsedOnTabChange();
 
-// Initialize the states
-function initializeState(){
-	chrome.storage.local.set({lastVisited: {} });
-	chrome.storage.local.set({timeElapsed: {} });
-	chrome.storage.local.set({tabsToDelete: {} });
+console.log(chrome.windows.WINDOW_ID_CURRENT);
+function updateTitle(){
+	chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+		if(changeInfo != undefined){
+		tableEntry[tabId].title = changeInfo.title;
+		console.log('New title of ', tabId, 'is', tableEntry[tabId].title)
+		chrome.storage.local.set({entries: tableEntry});
+		}
+	})
 }
 
 function initializeTableEntries(){
-	chrome.storage.local.get(null, function(res){
-		chrome.tabs.query({currentWindow: true}, function(arrayOfTabs){
-			for(const tab of arrayOfTabs){
-				tableEntry[tab.id] = {title: tab.title, timeElapsed: '', lastVisited: ''}
-				chrome.storage.local.set({entries: tableEntry})
-			}
-		})
+	chrome.tabs.query({currentWindow: true}, function(arrayOfTabs){
+		for(const tab of arrayOfTabs){
+			tableEntry[tab.id] = {title: tab.title, timeElapsed: 0, lastVisited: ''}
+			chrome.storage.local.set({entries: tableEntry})
+		}
 	})
- 
 }
 
 // Deletes new tabs after a user-specified delay
@@ -62,38 +62,36 @@ chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
 function updateLastVisited(){
 	chrome.tabs.onActivated.addListener(function(activeInfo){
 		let currentTab = activeInfo.tabId;
-		tableEntry[currentTab].lastVisited = dateToString((new Date()));
-		chrome.storage.local.set( {entries: tableEntry} );
+		if(tableEntry[currentTab] != undefined){
+			tableEntry[currentTab].lastVisited = dateToString((new Date()));
+			chrome.storage.local.set( {entries: tableEntry} );
+		}
 	})
 }
 
-// // Updates the Time Elapsed column for the current tab
-// function updateTimeElapsedOnTabChange(){
-// 	chrome.tabs.query({currentWindow: true, active: true}, function(arrayOfTabs){
-// 		let previous = arrayOfTabs[0].id;
-// 		chrome.tabs.onActivated.addListener(function(activeInfo){
-// 			console.log("Time elapsed onActivated");
-// 			let current = activeInfo.tabId;
-// 			chrome.storage.local.get(null, function(results){
+// Updates the Time Elapsed column for the current tab
+function updateTimeElapsedOnTabChange(){
+	chrome.tabs.query({currentWindow: true, active: true}, function(arrayOfTabs){
+		let previous = arrayOfTabs[0].id;
+		chrome.tabs.onActivated.addListener(function(activeInfo){
+			console.log("Time elapsed onActivated");
+			let current = activeInfo.tabId;
 
-// 				// When user changes tabs, we set the new elapsed time to the tab that we switched FROM
-// 				results.timeElapsed[previous] = results.timeElapsed[previous] + end(endTime, startTime);
-// 				chrome.storage.local.set({timeElapsed: results.timeElapsed});
+			if(tableEntry[previous] != undefined){			
+				tableEntry[previous].timeElapsed = tableEntry[previous].timeElapsed + end(endTime, startTime);
+				chrome.storage.local.set({entries: tableEntry});
+			}
+ 
+			if(tableEntry[current].timeElapsed == undefined){
+				tableEntry[current].timeElapsed = 0;
+			}
 
-// 				// Initialize current tab with 0 if it doesn't have a value
-// 				if(results.timeElapsed[current] == null || results.timeElapsed[current] == undefined){
-// 					results.timeElapsed[current] = 0;
-// 				}
-
-// 				// Start a brand new timer for the current tab
-// 				startTime = start();
-// 				chrome.storage.local.set({timeElapsed: results.timeElapsed});
-
-// 				previous = current;
-// 			})
-//  		})
-// 	})
-// }
+			startTime = start();
+			chrome.storage.local.set({entries: tableEntry});
+			previous = current;
+ 		})
+	})
+}
 // // Deletes function after a user-specified amount of time
 function delayedDelete(tabID){
 	let delayedTime;
