@@ -1,14 +1,13 @@
 import React from "react";
-import { hot } from "react-hot-loader"; 
 
 class DividerComponent extends React.Component{
     // Credit: @scottzirkel
     render () {
         return (
-            <div class="container">
+            <div className="container">
                 {/* <p>You can divide with any text you like.</p>
                 <p>For instance this...</p> */}
-                <hr class="hr-text" data-content= {this.props.text}/>
+                <hr className="hr-text" data-content= {this.props.text}/>
                 {/* <p>...this...</p> */}
                 {/* <hr class="hr-text" data-content="Tab Manager"/> */}
                 {/* <p>...even this!</p> */}
@@ -19,4 +18,4 @@ class DividerComponent extends React.Component{
 
 }
 
-export default hot(module)(DividerComponent)
+export default DividerComponent

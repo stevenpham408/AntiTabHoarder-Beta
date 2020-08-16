@@ -1,5 +1,4 @@
 import React from "react";
-import { hot } from "react-hot-loader";
 import logo from '../../img/logo.png'; // with import
 
 class BlockTitleComponent extends React.Component{
@@ -12,4 +11,4 @@ class BlockTitleComponent extends React.Component{
     }
 };
 
-export default hot(module)(BlockTitleComponent)
+export default (BlockTitleComponent)

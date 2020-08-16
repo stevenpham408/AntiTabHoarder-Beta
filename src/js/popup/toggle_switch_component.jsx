@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { withStyles } from "@material-ui/core/styles";
-import { hot } from "react-hot-loader";
 import { Switch } from '@material-ui/core/';
 
 const StyledSwitch = withStyles({
@@ -28,4 +27,4 @@ function ClassesShorthand({auto_delete_toggle_state, handleToggle}) {
   }
 }
 
-export default hot(module)(ClassesShorthand)
+export default ClassesShorthand

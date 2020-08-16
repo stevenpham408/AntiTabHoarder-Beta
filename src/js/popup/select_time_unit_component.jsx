@@ -1,5 +1,4 @@
 import React from "react";
-import { hot } from "react-hot-loader";
 import { withStyles } from "@material-ui/core/styles";
 import { Select } from '@material-ui/core'
 import {MenuItem} from '@material-ui/core'
@@ -51,4 +50,4 @@ function SelectComponent({auto_delete_toggle_state}) {
     )
 }
   
-export default hot(module)(SelectComponent)
+export default SelectComponent

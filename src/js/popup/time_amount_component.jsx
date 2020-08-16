@@ -1,6 +1,4 @@
 import React from "react";
-import { hot } from "react-hot-loader";
-
 import { TextField } from '@material-ui/core/';
 
 const style = {
@@ -68,5 +66,4 @@ function TimeAmountComponent({auto_delete_toggle_state}){
         />
     )
 }
-
-export default hot(module)(TimeAmountComponent)
+export default TimeAmountComponent
