@@ -1,5 +1,4 @@
 import React from 'react'
-import { hot } from "react-hot-loader";
 import MaUTable from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -8,12 +7,15 @@ import TableRow from '@material-ui/core/TableRow'
 import { useTable, usePagination, useResizeColumns, useBlockLayout} from 'react-table'
 import {makeData} from '../makeData.js'
 import styled from 'styled-components'
+import { sec2time } from '../time.js';
 
-// import {makeData} from '../background.js'
+import 'simplebar'
+import 'simplebar/dist/simplebar.css';
+
 const Styles = styled.div`
   padding: 1rem;
   .table{
-      display:block;
+    display:block;
     height: 250px;
     
     .th,
@@ -50,7 +52,6 @@ const Styles = styled.div`
     }
 
     &.sticky {
-        overflow: scroll;
         .header,
         .footer {
           position: sticky;
@@ -132,9 +133,9 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
 
     return (
         <>
-              <div>
-        <MaUTable {...getTableProps()} className="table sticky">
-          <div className='header'>
+        <div>
+        <MaUTable {...getTableProps()} data-simplebar className="table sticky">
+          <TableHead>
             {headerGroups.map((headerGroup) => (
               <TableRow {...headerGroup.getHeaderGroupProps()} className="tr">
                 {headerGroup.headers.map((column) => (
@@ -151,7 +152,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
                 ))}
               </TableRow>
             ))}
-          </div>
+          </TableHead>
 
           <TableBody {...getTableBodyProps()}>
             {rows.map((row, i) => {
@@ -264,7 +265,19 @@ function TableComponent(){
 
             {
                 Header: 'Time Elapsed',
-                // accessor: '1.timeElapsed'
+                accessor: (rows) => {
+                  if(rows[1] != undefined){
+                    if(rows[1].timeElapsed != 0 && rows[1].timeElapsed != undefined){
+                      return sec2time(rows[1].timeElapsed);
+                    }
+                    else{
+                      return ''
+                    }
+                  }
+                  else{
+                    throw "the row is undefined" 
+                  }
+                }
             }
         ], []);
         
@@ -275,9 +288,10 @@ function TableComponent(){
             data={data}
             fetchData = {fetchData}
             loading={loading}
-            pageCount={pageCount}/>
+            pageCount={pageCount}>
+            </Table>
         </Styles>
     )
 }
 
-export default hot(module)(TableComponent)
+export default TableComponent
