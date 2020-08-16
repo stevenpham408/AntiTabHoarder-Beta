@@ -135,7 +135,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
         <>
         <div>
         <MaUTable {...getTableProps()} data-simplebar className="table sticky">
-          <TableHead>
+          <div className='header'>
             {headerGroups.map((headerGroup) => (
               <TableRow {...headerGroup.getHeaderGroupProps()} className="tr">
                 {headerGroup.headers.map((column) => (
@@ -152,7 +152,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
                 ))}
               </TableRow>
             ))}
-          </TableHead>
+          </div>
 
           <TableBody {...getTableBodyProps()}>
             {rows.map((row, i) => {
