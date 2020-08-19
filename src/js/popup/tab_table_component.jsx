@@ -1,102 +1,115 @@
 import React from 'react'
-import MaUTable from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
+
 import { useTable, usePagination, useResizeColumns, useBlockLayout} from 'react-table'
 import {makeData} from '../makeData.js'
 import styled from 'styled-components'
 import { sec2time } from '../time.js';
+import { useSticky } from 'react-table-sticky';
 
 import 'simplebar'
 import 'simplebar/dist/simplebar.css';
 
 const Styles = styled.div`
-  padding: 1rem;
-  .table{
-    display:block;
-    height: 250px;
+padding: 1rem;
+.table{
+  display:block;
+  height: 250px;
+
+  .th{
+    height: 25px;
+    text-align: left;
+    padding-left: 5px;
+  }
+
+  .td{
+    height: 40px;
+    padding-top:10px;
+    text-align: left;
+  }
+
+  .th:nth-child(3),
+  .td:nth-child(3){
+    text-align: right;
+    padding-right: 5px;
+  }
+
+  .th:nth-child(4),
+  .td:nth-child(4){
+    text-align: right;
+    padding-right: 5px;
+  }
+  .th,
+  .td {
+    position: relative;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background-color: white;
+    overflow: hidden;
+
+
+    :last-child {
+      border-right: 0;
+    }
     
-    .th,
-    .td {
+    
+    .resizer {
+      display: inline-block;
+      background: darkgray;
+      width: 3px;
+      height: 100%;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transform: translateX(50%);
+      z-index: 1;
+      ${'' /* prevents from scrolling while dragging on touch devices */}
+      touch-action:none;
+      &.isResizing {
+        background: gray;
+      }
+    }
+  }
+  
+  &.sticky {
+    .header,
+    .footer {
+      position: sticky;
+      z-index: 1;
+      width: fit-content;
+    }
+    
+    .header {
+      top: 0;
+      box-shadow: 0px 3px 3px #ccc;
+    }
+    
+    .footer {
+      bottom: 0;
+      box-shadow: 0px -3px 3px #ccc;
+    }
+    
+    .body {
       position: relative;
-      height: 40px;
-      font-size: 10px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      background-color: white;
-
-      :last-child {
-        border-right: 0;
-      }
-
-      .resizer {
-        display: inline-block;
-        background: darkgray;
-        width: 3px;
-        height: 100%;
-        position: absolute;
-        right: 0;
-        top: 0;
-        transform: translateX(50%);
-        z-index: 1;
-        ${'' /* prevents from scrolling while dragging on touch devices */}
-        touch-action:none;
-
-        &.isResizing {
-          background: gray;
-        }
-      }
+      z-index: 0;
     }
-
-    &.sticky {
-        .header,
-        .footer {
-          position: sticky;
-          z-index: 1;
-          width: fit-content;
-        }
-  
-        .header {
-          top: 0;
-          box-shadow: 0px 3px 3px #ccc;
-        }
-  
-        .footer {
-          bottom: 0;
-          box-shadow: 0px -3px 3px #ccc;
-        }
-  
-        .body {
-          position: relative;
-          z-index: 0;
-        }
-  
-        [data-sticky-td] {
-          position: sticky;
-        }
-  
-        [data-sticky-last-left-td] {
-          box-shadow: 2px 0px 3px #ccc;
-        }
-  
-        [data-sticky-first-right-td] {
-          box-shadow: -2px 0px 3px #ccc;
-        }
-      }
+    
+    [data-sticky-td] {
+      position: sticky;
     }
+    
+    [data-sticky-last-left-td] {
+      box-shadow: 2px 0px 3px #ccc;
+    }
+    
+    [data-sticky-first-right-td] {
+      box-shadow: -2px 0px 3px #ccc;
+    }
+  }
+}
 `;
 
-function Table({ columns, data, fetchData, loading, pageCount: controlledPageCount }){
-    const defaultColumn = React.useMemo(
-        () => ({
-            minWidth: 70,
-            width: 150,
-            maxWidth: 400 
-        }), []
-    );
+function Table({ columns, data, fetchData, pageCount: controlledPageCount, getTrProps = props => props, count}){
     const { 
         getTableProps, 
         getTableBodyProps,
@@ -111,67 +124,67 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
         nextPage,
         previousPage,
         setPageSize,
-        state: {pageIndex, pageSize },
+        state: {pageIndex, pageSize},
 
     } = useTable({
         columns, 
         data,
-        defaultColumn,
-        initialState: { pageIndex: 0 },
+        initialState: { pageIndex: 0},
         manualPagination: true,
         pageCount: controlledPageCount,
     },
         useBlockLayout,
+        useSticky,
         useResizeColumns,
         usePagination,
 
     )
-
     React.useEffect(() => {
-        fetchData({ pageIndex, pageSize })
-      }, [fetchData, pageIndex, pageSize])
+      console.log("Use effect")
+      fetchData({ pageIndex, pageSize })
+    }, [fetchData, pageIndex, pageSize, count])
+
 
     return (
         <>
-        <div>
-        <MaUTable {...getTableProps()} data-simplebar className="table sticky">
+        <div {...getTableProps()} data-simplebar className="table sticky">
           <div className='header'>
             {headerGroups.map((headerGroup) => (
-              <TableRow {...headerGroup.getHeaderGroupProps()} className="tr">
+              <div {...headerGroup.getHeaderGroupProps()} className="tr">
                 {headerGroup.headers.map((column) => (
-                  <TableCell {...column.getHeaderProps()} className="th">
+                  <div {...column.getHeaderProps()} className="th">
                     {column.render("Header")}
-
                     <div
                       {...column.getResizerProps()}
                       className={`resizer ${
                         column.isResizing ? "isResizing" : ""
                       }`}
                     />
-                  </TableCell>
+                  </div>
                 ))}
-              </TableRow>
+              </div>
             ))}
           </div>
 
-          <TableBody {...getTableBodyProps()}>
+          <div {...getTableBodyProps()}>
             {rows.map((row, i) => {
               prepareRow(row);
               return (
-                <TableRow {...row.getRowProps()} className="tr">
+
+                <div {...row.getRowProps()} 
+                className="tr" >
                   {row.cells.map((cell) => {
                     return (
-                      <TableCell {...cell.getCellProps()} className="td">
+                      <div {...cell.getCellProps()} className="td">
                         {cell.render("Cell")}
-                      </TableCell>
+                      </div>
                     );
                   })}
-                </TableRow>
+                </div>
               );
             })}
-          </TableBody>
-        </MaUTable>
-      </div>        
+          </div>
+        </div >
         
         <div className="pagination">
             <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
@@ -215,7 +228,7 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
                     }}
                 >
                 
-                {[10, 20, 30, 40, 50].map(pageSize => (
+                {[3, 10, 20, 30, 40, 50].map(pageSize => (
                 <option key={pageSize} value={pageSize}>
                     Show {pageSize}
                 </option>
@@ -228,6 +241,9 @@ function Table({ columns, data, fetchData, loading, pageCount: controlledPageCou
 
 function TableComponent(){
     const [data, setData] = React.useState([])
+
+    const[count, setCount] = React.useState(0)
+
 
     const [loading, setLoading] = React.useState(false)
     const [pageCount, setPageCount] = React.useState(0)
@@ -243,10 +259,10 @@ function TableComponent(){
                 const startRow = pageSize * pageIndex
                 const endRow = startRow + pageSize         
                 const response = await makeData()
-                console.log('Dis da respawns: ', response)
                 setData(response.slice(startRow, endRow))
                 setPageCount(Math.ceil(response.length / pageSize))
                 setLoading(false)
+
             }
         }
         doFetch();
@@ -254,41 +270,72 @@ function TableComponent(){
  
     const columns = React.useMemo(
         () => [
-            {
-                Header: 'Title',
-                accessor: '1.title'
-            },
-            {
-                Header: 'Last Visited',
-                accessor: '1.lastVisited'
-            },
+          
+          {
+            width: 55,
+            Header: 'Actions',
+            accessor: 'delete',
+            Cell: (tableProps) => {
+              return (
+                <div>
+                  <span style={{cursor: 'pointer', color: 'blue', textDecoration:'underline'}}> Bookmark </span>
+                  <br></br>
+                  <span style={{cursor:'pointer', color: 'blue', textDecoration: 'underline' }}
+                  onClick = {async () => {
 
-            {
-                Header: 'Time Elapsed',
-                accessor: (rows) => {
-                  if(rows[1] != undefined){
-                    if(rows[1].timeElapsed != 0 && rows[1].timeElapsed != undefined){
-                      return sec2time(rows[1].timeElapsed);
-                    }
-                    else{
-                      return ''
-                    }
-                  }
-                  else{
-                    throw "the row is undefined" 
-                  }
-                }
+                    chrome.tabs.remove(tableProps.row.original[0])
+                    chrome.tabs.onRemoved.addListener(function removedCallback(tabId, removeInfo){
+                      setCount(count + 1);
+                      chrome.tabs.onRemoved.removeListener(removedCallback);
+                    })                           
+                     }}> Delete </span> 
+                </div>
+              )
             }
-        ], []);
+
+          },
+          
+          {
+            width: 225,
+            Header: 'Title',
+            accessor: '1.title'
+          },
+
+          {
+            width:100,
+            Header: 'Last Visited',
+            accessor: '1.lastVisited'
+          },
+
+          {
+            width: 75,
+            Header: 'Time Elapsed',
+            accessor: (rows) => {
+              if(rows[1] != undefined){
+                if(rows[1].timeElapsed != 0 && rows[1].timeElapsed != undefined){
+                  return sec2time(rows[1].timeElapsed);
+                }
+                else{
+                  return ''
+                }
+              }
+              
+              else{
+                throw "the row is undefined" 
+              }
+            }
+          }
+        ], [count]);
         
-    return (
+        return (
         <Styles>
             <Table
             columns={columns} 
             data={data}
             fetchData = {fetchData}
             loading={loading}
-            pageCount={pageCount}>
+            pageCount={pageCount}
+            count={count}>
             </Table>
         </Styles>
     )
