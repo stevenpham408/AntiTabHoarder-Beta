@@ -12,10 +12,26 @@ updateTimeElapsedOnTabChange();
 console.log(chrome.windows.WINDOW_ID_CURRENT);
 function updateTitle(){
 	chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+
+		if(changeInfo != undefined && changeInfo.favIconUrl != undefined){
+			tableEntry[tabId].faviconUrl = changeInfo.favIconUrl;
+			console.log('favicon url onupdated: ', tableEntry[tabId].faviconUrl);
+			chrome.storage.local.set({entries: tableEntry});
+
+		}
+
+		if(changeInfo != undefined && changeInfo.url != undefined){
+			tableEntry[tabId].url = changeInfo.url;
+			console.log('yes: ', tableEntry[tabId].url);
+
+			chrome.storage.local.set({entries: tableEntry});
+
+		}
+
 		if(changeInfo != undefined && changeInfo.title != undefined){
-		tableEntry[tabId].title = changeInfo.title;
-		console.log('New title of ', tabId, 'is', tableEntry[tabId].title)
-		chrome.storage.local.set({entries: tableEntry});
+			tableEntry[tabId].title = changeInfo.title;
+			console.log('New title of ', tabId, 'is', tableEntry[tabId].title)
+			chrome.storage.local.set({entries: tableEntry});
 		}
 	})
 }
@@ -23,7 +39,8 @@ function updateTitle(){
 function initializeTableEntries(){
 	chrome.tabs.query({currentWindow: true}, function(arrayOfTabs){
 		for(const tab of arrayOfTabs){
-			tableEntry[tab.id] = {title: tab.title, timeElapsed: 0, lastVisited: ''}
+			console.log("Query url: ", tab.favIconUrl);
+			tableEntry[tab.id] = {id: tab.id, url: tab.url, faviconUrl: tab.favIconUrl, title: tab.title, timeElapsed: 0, lastVisited: '', }
 			chrome.storage.local.set({entries: tableEntry})
 		}
 	})
@@ -31,7 +48,7 @@ function initializeTableEntries(){
 
 // Deletes new tabs after a user-specified delay
 chrome.tabs.onCreated.addListener(function(tab){
-	tableEntry[tab.id] = {title: tab.title, timeElapsed: 0, lastVisited: ''}
+	tableEntry[tab.id] = {id: tab.id, url: tab.pendingUrl, title: tab.title, timeElapsed: 0, lastVisited: ''}
 	chrome.storage.local.set({entries: tableEntry})
 	chrome.storage.local.get(null, function(results){
 		if(results.auto_delete_toggle == true){
@@ -51,7 +68,7 @@ chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
 	chrome.storage.local.set({entries: tableEntry});
 
 	chrome.storage.local.get(null, function(results){
-		if(results.tabsToDelete.hasOwnProperty(tabID) && results.auto_delete_toggle == true){
+		if(results.tabsToDelete != undefined && results.tabsToDelete.hasOwnProperty(tabID) && results.auto_delete_toggle == true){
 				delete results.tabsToDelete[tabID];
 				chrome.storage.local.set({tabsToDelete: results.tabsToDelete});
 		}
@@ -92,8 +109,11 @@ function updateTimeElapsedOnTabChange(){
 				chrome.storage.local.set({entries: tableEntry});
 				previous = current;
 			}
-s = current;
-e(tabID){
+		})
+	})
+}
+
+function delayedDelete(tabID){
 	let delayedTime;
 
 	chrome.storage.local.get(null, function(results){
@@ -105,7 +125,7 @@ e(tabID){
 					if(tabID in results.tabsToDelete){
 						chrome.tabs.remove(tabID)
 					}
-				})
+				})	
 			}, delayedTime);
 
 		})
@@ -113,31 +133,101 @@ e(tabID){
 }
 
 function dateToString(dateObject) {
-  const year = dateObject.getFullYear();
-
-  const month = dateObject.getMonth() + 1;
-  const day = dateObject.getDate();
-  let hour = dateObject.getHours();
-
-  if (dateObject.getHours() < 10) {
-    hour = "0" + dateObject.getHours();
+	const year = dateObject.getFullYear();
+	const month = dateObject.getMonth() + 1;
+	const day = dateObject.getDate();
+	let hour = dateObject.getHours();
+	let minutes = dateObject.getMinutes();
+	let seconds = dateObject.getSeconds();
+  
+	if (dateObject.getHours() < 10) {
+	  hour = "0" + dateObject.getHours();
+	}
+  
+	if (dateObject.getMinutes() < 10) {
+	  minutes = "0" + dateObject.getMinutes();
+	}
+  
+	if (dateObject.getSeconds() < 10) {
+	  seconds = "0" + dateObject.getSeconds();
+	}
+  
+	const formattedDate = month + "/" + day + "/" + year;
+	const formattedTime = hour + ":" + minutes + ":" + seconds;
+	const finishedFormattedString = formattedDate + ", " + formattedTime;
+	return finishedFormattedString;
   }
 
-  let minutes = dateObject.getMinutes();
-  let seconds = dateObject.getSeconds();
-
-
-  if (dateObject.getMinutes() < 10) {
-    minutes = "0" + dateObject.getMinutes();
-  }
-
-  if (dateObject.getSeconds() < 10) {
-    seconds = "0" + dateObject.getSeconds();
-  }
-
-  const formattedDate = month + "/" + day + "/" + year;
-  const formattedTime = hour + ":" + minutes + ":" + seconds;
-
-  const finishedFormattedString = formattedDate + ", " + formattedTime;
-  return finishedFormattedString;
+  let db = null;
+  function createDataStore() {
+	const request = window.indexedDB.open('MyIndexedDB');
+	request.onerrror = function(event) {
+		console.log('Error in opening MyIndexedDB.');	
+	}
+	
+	request.onupgradeneeded = function(event){
+		db = event.target.result;
+		
+		let store = db.createObjectStore('bookmarks', {
+			keyPath: 'id', autoIncrement: false
+		});
+		
+		store.transaction.oncomplete = function(event) {
+			console.log('Store created.')
+		}
+	}
+	
+	request.onsuccess = function(event){
+		db = event.target.result;
+		console.log('MyIndexedDB opened.')
+	}
 }
+
+function deleteDataStore() {
+	const request = window.indexedDB.deleteDatebase('MyIndexedDB');
+	request.onerrror = function(event) {
+		console.log('Error in deleting MyIndexedDB.');	
+	}
+	
+	request.onsuccess = function(event){
+		console.log('Successful deleting MyIndexedDB.');
+	}
+}
+
+function insertRecord(record){
+	if(db){	
+		const insertTransaction = db.transaction('bookmarks', 'readwrite');
+		const objectStore = insertTransaction.objectStore('bookmarks');
+
+		insertTransaction.oncomplete = function() {
+			console.log('All insert transactions are complete.');
+		}
+
+		insertTransaction.onerror = function() {
+			console.log('Error inserting transactions.');
+		}
+
+		let request = objectStore.add(record)
+		request.onsuccess = function (event) {
+			console.log('Successfully added.');
+		}
+	}
+}
+
+// Listener for IndexedDB operations
+chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse){
+		// When the user clicks on 'Bookmark' for a row in the Tab Manager
+		if(request.message == 'insert'){
+			insertRecord(request.newBookmark)
+		}
+
+		// When the user clicks on the 'View Bookmarks' button
+		else if(request.message == 'launch'){
+			console.log('Received Launch');
+			chrome.tabs.create({ url: chrome.runtime.getURL('./dashboard.html') });
+		}
+	}
+)
+
+createDataStore();
