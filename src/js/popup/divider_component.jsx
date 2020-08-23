@@ -12,7 +12,6 @@ class DividerComponent extends React.Component{
                 {/* <hr class="hr-text" data-content="Tab Manager"/> */}
                 {/* <p>...even this!</p> */}
             </div>
-            
         )
     }
 
