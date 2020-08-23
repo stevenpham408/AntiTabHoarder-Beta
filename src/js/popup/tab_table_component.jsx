@@ -14,6 +14,7 @@ padding: 1rem;
 .table{
   display:block;
   height: 250px;
+  overflow:auto;
 
   .th{
     height: 25px;
@@ -109,7 +110,7 @@ padding: 1rem;
 }
 `;
 
-function Table({ columns, data, fetchData, pageCount: controlledPageCount, getTrProps = props => props, count}){
+function Table({ columns, data, fetchData, pageCount: controlledPageCount, count}){
     const { 
         getTableProps, 
         getTableBodyProps,
@@ -137,13 +138,12 @@ function Table({ columns, data, fetchData, pageCount: controlledPageCount, getTr
         useSticky,
         useResizeColumns,
         usePagination,
-
     )
+
+    // Will rerender the pagination when a change in the dependencies is detected 
     React.useEffect(() => {
-      console.log("Use effect")
       fetchData({ pageIndex, pageSize })
     }, [fetchData, pageIndex, pageSize, count])
-
 
     return (
         <>
@@ -241,17 +241,34 @@ function Table({ columns, data, fetchData, pageCount: controlledPageCount, getTr
 
 function TableComponent(){
     const [data, setData] = React.useState([])
-
     const[count, setCount] = React.useState(0)
-
-
     const [loading, setLoading] = React.useState(false)
     const [pageCount, setPageCount] = React.useState(0)
     const fetchIdRef = React.useRef(0)
 
+    // When the user clicks 'Bookmark',
+    // (1) Send a message to background.js with 'insert' & row data
+    function saveToIndexedDB(row){
+      chrome.runtime.sendMessage({
+        message: 'insert',
+        newBookmark: row
+      })
+    }
+
+    // When the user clicks 'Delete', 
+    // (1) remove the tab, 
+    // (2) rerender the pagination component, 
+    // (3) free the listener afterwards
+    function removeAndRender(row){
+      chrome.tabs.remove(row)
+      chrome.tabs.onRemoved.addListener(function removedCallback(tabId, removeInfo){
+        setCount(count + 1);
+        chrome.tabs.onRemoved.removeListener(removedCallback);
+      })      
+    }
+
     const fetchData = React.useCallback(({ pageSize, pageIndex }) => {
         const fetchId = ++fetchIdRef.current
-
         setLoading(true)
 
         const doFetch = async() => {
@@ -262,7 +279,6 @@ function TableComponent(){
                 setData(response.slice(startRow, endRow))
                 setPageCount(Math.ceil(response.length / pageSize))
                 setLoading(false)
-
             }
         }
         doFetch();
@@ -270,7 +286,6 @@ function TableComponent(){
  
     const columns = React.useMemo(
         () => [
-          
           {
             width: 55,
             Header: 'Actions',
@@ -278,17 +293,16 @@ function TableComponent(){
             Cell: (tableProps) => {
               return (
                 <div>
-                  <span style={{cursor: 'pointer', color: 'blue', textDecoration:'underline'}}> Bookmark </span>
+                  <span 
+                    style={{cursor: 'pointer', color: 'blue', textDecoration:'underline'}}
+                    onClick = {() => {saveToIndexedDB(tableProps.row.original[1])}}
+                  > Bookmark </span>
                   <br></br>
-                  <span style={{cursor:'pointer', color: 'blue', textDecoration: 'underline' }}
-                  onClick = {async () => {
-
-                    chrome.tabs.remove(tableProps.row.original[0])
-                    chrome.tabs.onRemoved.addListener(function removedCallback(tabId, removeInfo){
-                      setCount(count + 1);
-                      chrome.tabs.onRemoved.removeListener(removedCallback);
-                    })                           
-                     }}> Delete </span> 
+                  <span 
+                    style={{cursor:'pointer', color: 'blue', textDecoration: 'underline' }}
+                    onClick = {() => {removeAndRender(tableProps.row.original[0]) }}> 
+                    Delete 
+                  </span> 
                 </div>
               )
             }
