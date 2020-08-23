@@ -1,45 +1,45 @@
 import '../img/icon-128.png'
 import '../img/icon-34.png'
-'use strict';
 import{ start, end } from './time.js';
+
+'use strict';
+
+let db = null;
 let tableEntry = {}
 var startTime, endTime;
+
 initializeTableEntries();
-updateTitle();
+updateTabInfo();
 updateLastVisited();
 updateTimeElapsedOnTabChange();
 
-console.log(chrome.windows.WINDOW_ID_CURRENT);
-function updateTitle(){
+// Listener for changes to existing tabs and updates local storage accordingly
+function updateTabInfo(){
 	chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
-
+		// Saves the favIcon url for the tab when it successfully loads 
 		if(changeInfo != undefined && changeInfo.favIconUrl != undefined){
 			tableEntry[tabId].faviconUrl = changeInfo.favIconUrl;
-			console.log('favicon url onupdated: ', tableEntry[tabId].faviconUrl);
 			chrome.storage.local.set({entries: tableEntry});
-
 		}
 
+		// Saves the website url for the tab when it successfully loads 
 		if(changeInfo != undefined && changeInfo.url != undefined){
 			tableEntry[tabId].url = changeInfo.url;
-			console.log('yes: ', tableEntry[tabId].url);
-
 			chrome.storage.local.set({entries: tableEntry});
-
 		}
 
+		// Saves the website title for the tab when it successfully loads 
 		if(changeInfo != undefined && changeInfo.title != undefined){
 			tableEntry[tabId].title = changeInfo.title;
-			console.log('New title of ', tabId, 'is', tableEntry[tabId].title)
 			chrome.storage.local.set({entries: tableEntry});
 		}
 	})
 }
 
+// Initializes the local storage with all of the currently open tabs of the window for the Tab Manager to fetch data from
 function initializeTableEntries(){
 	chrome.tabs.query({currentWindow: true}, function(arrayOfTabs){
 		for(const tab of arrayOfTabs){
-			console.log("Query url: ", tab.favIconUrl);
 			tableEntry[tab.id] = {id: tab.id, url: tab.url, faviconUrl: tab.favIconUrl, title: tab.title, timeElapsed: 0, lastVisited: '', }
 			chrome.storage.local.set({entries: tableEntry})
 		}
@@ -54,7 +54,6 @@ chrome.tabs.onCreated.addListener(function(tab){
 		if(results.auto_delete_toggle == true){
 			results.tabsToDelete[tab.id] = new Date().toString();
 			chrome.storage.local.set({tabsToDelete: results.tabsToDelete});
-			console.log('Debug #1 ', tab.id, results.tabsToDelete);
 			delayedDelete(tab.id);
 		}
 	})
@@ -62,11 +61,8 @@ chrome.tabs.onCreated.addListener(function(tab){
 
 // // In the case the user self-deletes the tab before delayedDelete is ran, no errors will be found
 chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
-	console.log('Removed', tabID, 'from tableEntry. Original data:', tableEntry[tabID]);
 	delete tableEntry[tabID];
-	console.log('Check to see if data is now null:', tableEntry[tabID])
 	chrome.storage.local.set({entries: tableEntry});
-
 	chrome.storage.local.get(null, function(results){
 		if(results.tabsToDelete != undefined && results.tabsToDelete.hasOwnProperty(tabID) && results.auto_delete_toggle == true){
 				delete results.tabsToDelete[tabID];
@@ -75,12 +71,12 @@ chrome.tabs.onRemoved.addListener(function(tabID, removeInfo){
 	});
 });
 
-// // Updates the Last Visited column for the current tab
+// Updates the Last Visited column for the current tab
 function updateLastVisited(){
 	chrome.tabs.onActivated.addListener(function(activeInfo){
 		let currentTab = activeInfo.tabId;
 		if(tableEntry[currentTab] != undefined){
-			tableEntry[currentTab].lastVisited = dateToString((new Date()));
+			tableEntry[currentTab].lastVisited = (new Date()).toLocaleString();
 			chrome.storage.local.set( {entries: tableEntry} );
 		}
 	})
@@ -91,17 +87,17 @@ function updateTimeElapsedOnTabChange(){
 	chrome.tabs.query({currentWindow: true, active: true}, function(arrayOfTabs){
 		let previous = arrayOfTabs[0].id;
 		chrome.tabs.onActivated.addListener(function(activeInfo){
-			console.log("----------------------------------Time elapsed onActivated-------------------------------------");
+			// console.log("----------------------------------Time elapsed onActivated-------------------------------------");
 			let current = activeInfo.tabId;
 
 			if(tableEntry[previous] != undefined){		
-				console.log('Tab switch triggered -- Previous Tab:', tableEntry[previous].title)
+				// console.log('Tab switch triggered -- Previous Tab:', tableEntry[previous].title)
 				tableEntry[previous].timeElapsed = tableEntry[previous].timeElapsed + end(endTime, startTime);
 				chrome.storage.local.set({entries: tableEntry});
 			}
  
 			if(tableEntry[current].timeElapsed == undefined){
-				console.log('Undefined current tab yas -- Title: ', tableEntry[current].title)
+				// console.log('Undefined current tab yas -- Title: ', tableEntry[current].title)
 				tableEntry[current].timeElapsed = 0;
 			}
 			else{
@@ -113,9 +109,10 @@ function updateTimeElapsedOnTabChange(){
 	})
 }
 
+// Helper function that performs an automatic browser tab delete after user-specified amount of time,
+// provided that AutoDelete is toggled on
 function delayedDelete(tabID){
 	let delayedTime;
-
 	chrome.storage.local.get(null, function(results){
 		if(results.timeUnit == "minutes") { delayedTime = results.auto_delete_time_amount * 60000 };
 		if(results.timeUnit == "hours")  { delayedTime = results.auto_delete_time_amount * 3600000 };
@@ -132,39 +129,16 @@ function delayedDelete(tabID){
 	})
 }
 
-function dateToString(dateObject) {
-	const year = dateObject.getFullYear();
-	const month = dateObject.getMonth() + 1;
-	const day = dateObject.getDate();
-	let hour = dateObject.getHours();
-	let minutes = dateObject.getMinutes();
-	let seconds = dateObject.getSeconds();
-  
-	if (dateObject.getHours() < 10) {
-	  hour = "0" + dateObject.getHours();
-	}
-  
-	if (dateObject.getMinutes() < 10) {
-	  minutes = "0" + dateObject.getMinutes();
-	}
-  
-	if (dateObject.getSeconds() < 10) {
-	  seconds = "0" + dateObject.getSeconds();
-	}
-  
-	const formattedDate = month + "/" + day + "/" + year;
-	const formattedTime = hour + ":" + minutes + ":" + seconds;
-	const finishedFormattedString = formattedDate + ", " + formattedTime;
-	return finishedFormattedString;
-  }
-
-  let db = null;
-  function createDataStore() {
+// Opens a connection to IndexedDB and creates an object store if it does not exist
+function createDataStore() {
 	const request = window.indexedDB.open('MyIndexedDB');
+
+	// Print a message to the console indicating that our request to connect to IndexedDB failed
 	request.onerrror = function(event) {
 		console.log('Error in opening MyIndexedDB.');	
 	}
-	
+
+	// Opens a connection and creates an object store if our db object is on a different version
 	request.onupgradeneeded = function(event){
 		db = event.target.result;
 		
@@ -177,12 +151,14 @@ function dateToString(dateObject) {
 		}
 	}
 	
+	// Initialize the db object when our request to open a connection to IndexedDB is successful
 	request.onsuccess = function(event){
 		db = event.target.result;
 		console.log('MyIndexedDB opened.')
 	}
 }
 
+// Deletes the entire object store holding all the bookmarks saved from the extension
 function deleteDataStore() {
 	const request = window.indexedDB.deleteDatebase('MyIndexedDB');
 	request.onerrror = function(event) {
@@ -194,7 +170,9 @@ function deleteDataStore() {
 	}
 }
 
+// Inserts a record into IndexedDB in the 'bookmarks' object store
 function insertRecord(record){
+	// Check if database is open
 	if(db){	
 		const insertTransaction = db.transaction('bookmarks', 'readwrite');
 		const objectStore = insertTransaction.objectStore('bookmarks');

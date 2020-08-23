@@ -1,16 +1,8 @@
 export function makeData(){
     return getVarFromLocalStorage('entries')
-    
 }
 
-export function getVarFromLocalStorage2(name){
-    return new Promise(function(resolve, reject){
-        chrome.storage.local.get([name], function(items){
-            resolve(items[name])
-        })
-    })
-}
-
+// Helper function that returns a Promise to an array of our custom Tab objects stored in the browser's local storage
 export function getVarFromLocalStorage(name){
     return new Promise(function(resolve, reject) {
         chrome.storage.local.get([name], function(items){

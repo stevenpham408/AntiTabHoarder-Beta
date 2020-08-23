@@ -22,7 +22,6 @@ export function sec2time(timeInSeconds) {
     hours = Math.floor(time / 60 / 60),
     minutes = Math.floor(time / 60) % 60,
     seconds = Math.floor(time - minutes * 60),
-    milliseconds = time.slice(-3);
 
     return pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2);
 }
