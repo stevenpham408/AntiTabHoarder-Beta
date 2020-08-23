@@ -2,7 +2,7 @@ import "../css/popup.scss";
 import React from "react";
 
 import { render } from "react-dom";
-import App from './dashboard/AppComponent.jsx';
+import App from './dashboard/DashboardAppComponent.jsx';
 
  render(
   <App/>,
